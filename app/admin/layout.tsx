@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { LayoutDashboard, MessageSquare, Settings, LogOut, Shield, Loader2 } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Settings, LogOut, Shield, Loader2, Megaphone } from 'lucide-react';
 
 export default function AdminLayout({
     children,
@@ -134,6 +134,13 @@ export default function AdminLayout({
                     >
                         <MessageSquare className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
                         <span className="font-medium">Tickets</span>
+                    </Link>
+                    <Link
+                        href="/admin/broadcasts"
+                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-gray-300 transition-all duration-200 hover:bg-brand-gold hover:text-brand-navy hover:shadow-lg hover:shadow-brand-gold/20 ${pathname === '/admin/broadcasts' ? 'bg-brand-gold text-brand-navy' : ''}`}
+                    >
+                        <Megaphone className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                        <span className="font-medium">Broadcasts</span>
                     </Link>
                     <Link
                         href="/admin/settings"
