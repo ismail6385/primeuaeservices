@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { Resend } from 'resend';
+import React from 'react';
 import { ContactEmail } from '@/components/email-templates/ContactEmail';
 
 // Initialize Resend
@@ -42,9 +43,9 @@ export async function POST(request: NextRequest) {
         const { data: emailData, error: emailError } = await resend.emails.send({
             from: 'Prime UAE Website <onboarding@resend.dev>',
             to: ['primeuaeservices@gmail.com'],
-            reply_to: email,
+            replyTo: email,
             subject: `New Inquiry: ${name} - ${service}`,
-            react: ContactEmail({ name, email, phone, service, message }),
+            react: React.createElement(ContactEmail, { name, email, phone, service, message }),
         });
 
         if (emailError) {
