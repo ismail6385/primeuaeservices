@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        /* Brand Colors */
+        --brand-navy: #0A4D94;
+        --accent-gold: #F4B94F;
+        --cta-green: #25D366;
+        --accent-teal: #0FB3A6;
+
+        /* Text Colors */
+        --text-dark: #0B2236;
+        --text-body: #333A43;
+        --text-muted: #9AA3AB;
+
+        /* Background Colors */
+        --bg-light: #F7F9FB;
+        --bg-white: #FFFFFF;
+        --footer-dark: #061627;
+
+        /* Shadcn UI Variables (mapped to brand colors) */
+        --background: 0 0% 100%;
+        --foreground: 210 60% 13%;
+        --card: 0 0% 100%;
+        --card-foreground: 210 60% 13%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 210 60% 13%;
+        --primary: 207 87% 31%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 20% 98%;
+        --secondary-foreground: 210 60% 13%;
+        --muted: 210 20% 98%;
+        --muted-foreground: 210 10% 64%;
+        --accent: 42 89% 63%;
+        --accent-foreground: 210 60% 13%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 210 20% 90%;
+        --input: 210 20% 90%;
+        --ring: 207 87% 31%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 210 100% 4%;
+        --foreground: 0 0% 98%;
+        --card: 210 100% 4%;
+        --card-foreground: 0 0% 98%;
+        --popover: 210 100% 4%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 207 87% 31%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 30% 15%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 210 30% 15%;
+        --muted-foreground: 210 10% 64%;
+        --accent: 42 89% 63%;
+        --accent-foreground: 210 60% 13%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 210 30% 15%;
+        --input: 210 30% 15%;
+        --ring: 207 87% 31%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+    }
+}
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+/* Custom Brand Theme Styles */
+.gradient-navy {
+    background: linear-gradient(135deg, #0A4D94 0%, #0FB3A6 100%);
+}
+
+.gradient-gold {
+    background: linear-gradient(135deg, #F4B94F 0%, #FFD700 100%);
+}
+
+.gradient-text-navy {
+    background: linear-gradient(135deg, #0A4D94 0%, #0FB3A6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-text-gold {
+    background: linear-gradient(135deg, #F4B94F 0%, #FFD700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glassmorphism {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glassmorphism-dark {
+    background: rgba(6, 22, 39, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(10, 77, 148, 0.2);
+}
+
+.btn-cta {
+    background-color: var(--cta-green);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-cta:hover {
+    background-color: #1fb355;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+/* Smooth transitions */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--footer-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--accent-teal) 100%);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-gold);
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Brand hover effects */
+.hover-navy-glow {
+    transition: all 0.3s ease;
+}
+
+.hover-navy-glow:hover {
+    box-shadow: 0 0 20px rgba(10, 77, 148, 0.5);
+    transform: translateY(-2px);
+}
+
+.hover-gold-glow {
+    transition: all 0.3s ease;
+}
+
+.hover-gold-glow:hover {
+    box-shadow: 0 0 20px rgba(244, 185, 79, 0.5);
+    transform: translateY(-2px);
+}
