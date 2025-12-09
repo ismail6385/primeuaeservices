@@ -3,12 +3,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { supabase } from '@/lib/supabase';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_UoPUesWQ_aoQrPnY2qM8Cn54rpAZ1Lq7U');
 
 export async function POST(request: NextRequest) {
     try {
+        // Check authentication using Supabase session
+        const supabase = createRouteHandlerClient({ cookies });
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+        if (authError || !session) {
+            return NextResponse.json(
+                { error: 'Unauthorized. Please login to continue.' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
         const { ticketId, to, subject, message, customerName } = body;
 
@@ -17,15 +29,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json(
                 { error: 'Missing required fields: to, subject, message' },
                 { status: 400 }
-            );
-        }
-
-        // Check authentication
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
             );
         }
 
@@ -70,7 +73,26 @@ export async function POST(request: NextRequest) {
 
         const fromEmail = process.env.RESEND_FROM_EMAIL || 'Prime UAE Services <noreply@primeuaeservices.com>';
 
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(to)) {
+            return NextResponse.json(
+                { error: 'Invalid email address' },
+                { status: 400 }
+            );
+        }
+
+        // Check if Resend API key is configured
+        if (!process.env.RESEND_API_KEY) {
+            console.error('RESEND_API_KEY is not configured');
+            return NextResponse.json(
+                { error: 'Email service is not configured. Please contact administrator.' },
+                { status: 500 }
+            );
+        }
+
         // Send email via Resend
+        console.log('Sending email via Resend:', { to, subject, fromEmail });
         const { data, error } = await resend.emails.send({
             from: fromEmail,
             to: [to],
@@ -81,15 +103,18 @@ export async function POST(request: NextRequest) {
 
         if (error) {
             console.error('Resend error:', error);
+            console.error('Error details:', JSON.stringify(error, null, 2));
             return NextResponse.json(
-                { error: error.message || 'Failed to send email' },
+                { error: error.message || 'Failed to send email. Please check Resend configuration.' },
                 { status: 500 }
             );
         }
 
+        console.log('Email sent successfully:', data?.id);
+
         // Update ticket notes with reply sent info
         if (ticketId) {
-            const replyNote = `\n\n[Reply sent on ${new Date().toLocaleString()}] ${subject}`;
+            const replyNote = `\n\n[Reply sent on ${new Date().toLocaleString()}] ${subject}\nMessage: ${message}`;
             const { data: ticket } = await supabase
                 .from('tickets')
                 .select('notes')

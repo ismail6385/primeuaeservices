@@ -185,8 +185,21 @@ export default function TicketsPage() {
             return;
         }
 
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(selectedTicket.email)) {
+            toast.error('Invalid customer email address');
+            return;
+        }
+
         setSendingReply(true);
         try {
+            console.log('Sending reply email:', {
+                ticketId: selectedTicket.id,
+                to: selectedTicket.email,
+                subject: replySubject,
+            });
+
             const response = await fetch('/api/admin/send-reply', {
                 method: 'POST',
                 headers: {
@@ -203,7 +216,13 @@ export default function TicketsPage() {
 
             const data = await response.json();
 
-            if (response.ok && data.success) {
+            console.log('Reply API response:', { status: response.status, data });
+
+            if (!response.ok) {
+                throw new Error(data.error || `Failed to send reply (${response.status})`);
+            }
+
+            if (data.success) {
                 toast.success('Reply sent successfully!');
                 setReplySubject('');
                 setReplyMessage('');
@@ -215,7 +234,8 @@ export default function TicketsPage() {
             }
         } catch (error: any) {
             console.error('Error sending reply:', error);
-            toast.error(error.message || 'Failed to send reply. Please try again.');
+            const errorMessage = error.message || 'Failed to send reply. Please check console for details.';
+            toast.error(errorMessage);
         } finally {
             setSendingReply(false);
         }
