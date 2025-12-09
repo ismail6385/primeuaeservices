@@ -116,7 +116,7 @@ export default function EditBlogPostPage() {
                     postData.published_at = new Date().toISOString();
                 }
                 // If already published, keep the original published_at date
-            } else if (formData.status !== 'published' && originalStatus === 'published') {
+            } else if (originalStatus === 'published') {
                 // Unpublishing - don't change published_at, just change status
             }
 
@@ -143,7 +143,7 @@ export default function EditBlogPostPage() {
                     details: error.details,
                     hint: error.hint,
                 });
-                
+
                 // Better error messages
                 if (error.code === '23505') {
                     throw new Error('A post with this slug already exists. Please use a different slug.');
@@ -152,7 +152,7 @@ export default function EditBlogPostPage() {
                 } else if (error.message?.includes('relation') || error.message?.includes('does not exist')) {
                     throw new Error('Blog table not found. Please run the blog setup SQL in Supabase.');
                 }
-                
+
                 throw error;
             }
 

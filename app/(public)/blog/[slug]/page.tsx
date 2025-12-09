@@ -71,16 +71,18 @@ async function getBlogPost(slug: string) {
         }
 
         // Increment views (don't wait for this to complete)
-        supabase
-            .from('blog_posts')
-            .update({ views: (data.views || 0) + 1 })
-            .eq('id', data.id)
-            .then(() => {
-                // Silently handle view increment
-            })
-            .catch((err) => {
-                console.error('Error incrementing views:', err);
-            });
+        // Increment views (don't wait for this to complete)
+        const incrementViews = async () => {
+            const { error } = await supabase
+                .from('blog_posts')
+                .update({ views: (data.views || 0) + 1 })
+                .eq('id', data.id);
+
+            if (error) {
+                console.error('Error incrementing views:', error);
+            }
+        };
+        incrementViews();
 
         return data;
     } catch (error) {
@@ -97,7 +99,7 @@ export async function generateMetadata({
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://primeuaeservices.com';
     // Ensure params are resolved
     const slug = typeof params.slug === 'string' ? params.slug : params.slug?.[0] || '';
-    
+
     if (!slug) {
         return {
             title: 'Post Not Found',
@@ -133,7 +135,7 @@ export default async function BlogPostPage({
 }) {
     // Ensure params are resolved (Next.js 15+ requirement)
     const slug = typeof params.slug === 'string' ? params.slug : params.slug?.[0] || '';
-    
+
     if (!slug) {
         notFound();
     }
