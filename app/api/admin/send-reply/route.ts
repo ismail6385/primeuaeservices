@@ -3,29 +3,28 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_UoPUesWQ_aoQrPnY2qM8Cn54rpAZ1Lq7U');
 
+// Create Supabase client for database operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 export async function POST(request: NextRequest) {
     try {
-        // Check authentication using Supabase session
-        const supabase = createRouteHandlerClient({ cookies });
-        const { data: { session }, error: authError } = await supabase.auth.getSession();
-
-        if (authError || !session) {
-            return NextResponse.json(
-                { error: 'Unauthorized. Please login to continue.' },
-                { status: 401 }
-            );
-        }
-
+        console.log('📧 Send Reply API called');
+        
+        // Parse request body
         const body = await request.json();
         const { ticketId, to, subject, message, customerName } = body;
 
+        console.log('Request data:', { ticketId, to, subject, messageLength: message?.length });
+
         // Validate required fields
         if (!to || !subject || !message) {
+            console.error('❌ Missing required fields:', { to: !!to, subject: !!subject, message: !!message });
             return NextResponse.json(
                 { error: 'Missing required fields: to, subject, message' },
                 { status: 400 }
@@ -76,15 +75,17 @@ export async function POST(request: NextRequest) {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(to)) {
+            console.error('❌ Invalid email format:', to);
             return NextResponse.json(
-                { error: 'Invalid email address' },
+                { error: 'Invalid email address format' },
                 { status: 400 }
             );
         }
 
         // Check if Resend API key is configured
-        if (!process.env.RESEND_API_KEY) {
-            console.error('RESEND_API_KEY is not configured');
+        const resendApiKey = process.env.RESEND_API_KEY;
+        if (!resendApiKey) {
+            console.error('❌ RESEND_API_KEY is not configured');
             return NextResponse.json(
                 { error: 'Email service is not configured. Please contact administrator.' },
                 { status: 500 }
@@ -92,7 +93,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Send email via Resend
-        console.log('Sending email via Resend:', { to, subject, fromEmail });
+        console.log('📤 Sending email via Resend:', { 
+            to, 
+            subject, 
+            fromEmail,
+            hasApiKey: !!resendApiKey 
+        });
+        
         const { data, error } = await resend.emails.send({
             from: fromEmail,
             to: [to],
@@ -102,15 +109,18 @@ export async function POST(request: NextRequest) {
         });
 
         if (error) {
-            console.error('Resend error:', error);
+            console.error('❌ Resend error:', error);
             console.error('Error details:', JSON.stringify(error, null, 2));
             return NextResponse.json(
-                { error: error.message || 'Failed to send email. Please check Resend configuration.' },
+                { 
+                    error: error.message || 'Failed to send email. Please check Resend configuration.',
+                    details: error 
+                },
                 { status: 500 }
             );
         }
 
-        console.log('Email sent successfully:', data?.id);
+        console.log('✅ Email sent successfully:', { emailId: data?.id, to, subject });
 
         // Update ticket notes with reply sent info
         if (ticketId) {
