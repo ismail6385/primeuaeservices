@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const resend = new Resend(process.env.RESEND_API_KEY || 're_UoPUesWQ_aoQrPnY2qM8Cn54rpAZ1Lq7U');
 
@@ -119,19 +119,27 @@ export async function POST(request: NextRequest) {
 
         // Update ticket notes with reply sent info
         if (ticketId) {
-            const replyNote = `\n\n[Reply sent on ${new Date().toLocaleString()}] ${subject}\nMessage: ${message}`;
-            const { data: ticket } = await supabase
-                .from('tickets')
-                .select('notes')
-                .eq('id', ticketId)
-                .single();
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-            const updatedNotes = (ticket?.notes || '') + replyNote;
-            
-            await supabase
-                .from('tickets')
-                .update({ notes: updatedNotes })
-                .eq('id', ticketId);
+            if (!supabaseUrl || !supabaseKey) {
+                console.warn('⚠️ Supabase credentials missing, skipping ticket update');
+            } else {
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                const replyNote = `\n\n[Reply sent on ${new Date().toLocaleString()}] ${subject}\nMessage: ${message}`;
+                const { data: ticket } = await supabase
+                    .from('tickets')
+                    .select('notes')
+                    .eq('id', ticketId)
+                    .single();
+
+                const updatedNotes = (ticket?.notes || '') + replyNote;
+                
+                await supabase
+                    .from('tickets')
+                    .update({ notes: updatedNotes })
+                    .eq('id', ticketId);
+            }
         }
 
         return NextResponse.json({
