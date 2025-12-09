@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Shield, Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -38,17 +39,40 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
+            // Check if Supabase is configured
+            if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+                throw new Error('Supabase is not configured. Please check your environment variables.');
+            }
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
                 password,
             });
 
-            if (error) throw error;
+            if (error) {
+                // Provide user-friendly error messages
+                if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed')) {
+                    throw new Error('Invalid email or password. Please check your credentials or create an admin account in Supabase.');
+                }
+                throw error;
+            }
 
-            router.push('/admin');
-            router.refresh();
+            if (data?.session) {
+                router.push('/admin');
+                router.refresh();
+            } else {
+                throw new Error('No session created. Please check your credentials.');
+            }
         } catch (error: any) {
-            setError(error.message || 'Failed to sign in');
+            console.error('Login error:', error);
+            let errorMessage = error.message || 'Failed to sign in. Please check your email and password.';
+            
+            // Network errors
+            if (error.message?.includes('fetch') || error.message?.includes('network')) {
+                errorMessage = 'Network error. Please check your internet connection and try again.';
+            }
+            
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -72,9 +96,17 @@ export default function LoginPage() {
                 <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-xl dark:border-gray-700 dark:bg-gray-800">
                     <form className="space-y-6" onSubmit={handleLogin}>
                         {error && (
-                            <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-500 dark:bg-red-500/10">
-                                <AlertCircle className="h-4 w-4" />
-                                {error}
+                            <div className="flex flex-col gap-2 rounded-lg bg-red-50 p-4 text-sm text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                                <div className="flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <span className="font-semibold">Login Failed</span>
+                                </div>
+                                <p className="pl-6">{error}</p>
+                                {error.includes('Invalid login credentials') && (
+                                    <p className="pl-6 text-xs text-red-500 dark:text-red-400">
+                                        Note: Make sure you have created an admin user in Supabase first.
+                                    </p>
+                                )}
                             </div>
                         )}
 
@@ -98,9 +130,17 @@ export default function LoginPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Password
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Password
+                                </label>
+                                <Link
+                                    href="/admin/forgot-password"
+                                    className="text-sm font-medium text-brand-navy hover:text-brand-dark dark:text-brand-gold"
+                                >
+                                    Forgot password?
+                                </Link>
+                            </div>
                             <div className="relative mt-1">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <Lock className="h-5 w-5 text-gray-400" />
@@ -131,6 +171,22 @@ export default function LoginPage() {
                             )}
                         </Button>
                     </form>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                        <p className="font-semibold mb-1">🔧 Quick Fix: Set Password</p>
+                        <p className="mb-2">Agar user Supabase mein hai lekin password set nahi hai:</p>
+                        <div className="space-y-1 text-xs">
+                            <p><strong>Method 1:</strong> Supabase Dashboard → Users → User select karo → Password field mein naya password dalo → "Update user"</p>
+                            <p><strong>Method 2:</strong> "Send password reset email" button use karo</p>
+                            <p className="mt-2"><strong>Important:</strong> "Email confirmed" ✅ check karna zaroori hai!</p>
+                        </div>
+                    </div>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                        <p className="font-semibold">📝 First time setup?</p>
+                        <p>Supabase Dashboard → Authentication → Users → "Add user" → Email + Password dalo → "Auto Confirm User" ✅ check karo</p>
+                    </div>
                 </div>
 
                 <p className="text-center text-xs text-gray-500 dark:text-gray-400">

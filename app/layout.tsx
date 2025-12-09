@@ -1,9 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { DM_Sans } from 'next/font/google';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import WhatsAppButton from '@/components/WhatsAppButton';
+
 import { Toaster } from '@/components/ui/toaster';
 
 const dmSans = DM_Sans({
@@ -37,10 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={dmSans.className}>
-        <Header />
-        <main className="min-h-screen bg-brand-bg">{children}</main>
-        <Footer />
-        <WhatsAppButton />
+        {children}
         <Toaster />
       </body>
     </html>

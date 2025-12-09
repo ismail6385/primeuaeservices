@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 import { generateFAQSchema } from '@/lib/faq-schema';
+import { useMemo } from 'react';
 
 interface ServicePageProps {
   title: string;
@@ -16,6 +17,7 @@ interface ServicePageProps {
     description: string;
   }[];
   faqs: FAQItem[];
+  heroFeatures?: string[];
 }
 
 export default function ServicePageTemplate({
@@ -25,7 +27,59 @@ export default function ServicePageTemplate({
   benefits,
   howItWorks,
   faqs,
+  heroFeatures = [],
 }: ServicePageProps) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://primeuaeservices.com';
+  const slugFromTitle = useMemo(
+    () =>
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, ''),
+    [title]
+  );
+
+  const serviceSchema = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: title,
+    description: description,
+    provider: {
+      '@type': 'Organization',
+      name: 'Prime UAE Services',
+      url: siteUrl,
+      telephone: '+971527707492',
+      areaServed: 'AE',
+    },
+    areaServed: 'AE',
+    serviceType: title,
+  }), [description, siteUrl, title]);
+
+  const breadcrumbSchema = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: `${siteUrl}/`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Services',
+        item: `${siteUrl}/services`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: title,
+        item: `${siteUrl}/services/${slugFromTitle}`,
+      },
+    ],
+  }), [siteUrl, slugFromTitle, title]);
+
   return (
     <>
       <Hero
@@ -34,6 +88,7 @@ export default function ServicePageTemplate({
         description={description}
         ctaText="Get a Free Quote"
         ctaHref="/contact"
+        features={heroFeatures}
       />
 
       <section className="bg-white py-16">
@@ -61,6 +116,55 @@ export default function ServicePageTemplate({
 
       <HowItWorks steps={howItWorks} />
 
+      <section className="bg-white py-14">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-bold text-brand-dark sm:text-3xl">Explore Related Services</h2>
+            <p className="mt-2 text-brand-text">
+              Continue your journey with our most-requested UAE visa and business services.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Link
+              href="/services/employment-visa-uae"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              Employment Visa Services in Dubai
+            </Link>
+            <Link
+              href="/services/family-visa-uae"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              Family Visa Sponsorship in UAE
+            </Link>
+            <Link
+              href="/services/golden-visa-services"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              Golden Visa Application Assistance
+            </Link>
+            <Link
+              href="/services/complete-business-setup"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              Business Setup & Company Formation in Dubai
+            </Link>
+            <Link
+              href="/services/tasheel-services"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              PRO & Tasheel Typing Services
+            </Link>
+            <Link
+              href="/services/accounting-bookkeeping-dubai"
+              className="rounded-lg border border-brand-muted/30 bg-brand-bg px-5 py-4 text-brand-navy transition hover:border-brand-gold hover:bg-white hover:shadow"
+            >
+              Accounting & Bookkeeping Compliance in UAE
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="bg-brand-bg py-16">
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="mb-6 text-3xl font-bold text-brand-dark">
@@ -83,7 +187,7 @@ export default function ServicePageTemplate({
               className="rounded-full bg-brand-green px-8 text-lg font-semibold text-white transition-all hover:bg-brand-green/90"
             >
               <a
-                href="https://wa.me/971000000000"
+                href="https://wa.me/971527707492"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -100,6 +204,18 @@ export default function ServicePageTemplate({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateFAQSchema(faqs)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(serviceSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
     </>

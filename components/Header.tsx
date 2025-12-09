@@ -1,17 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Menu, X, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Services', href: '/services' },
+    { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -71,32 +79,42 @@ export default function Header() {
 
             <button
               type="button"
-              className="md:hidden"
+              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-brand-text hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-navy"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle mobile menu"
+              aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-brand-text" />
+                <X className="h-6 w-6" />
               ) : (
-                <Menu className="h-6 w-6 text-brand-text" />
+                <Menu className="h-6 w-6" />
               )}
             </button>
           </div>
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-gray-200 py-4 md:hidden">
+          <div className="border-t border-gray-200 bg-white py-4 md:hidden">
             <div className="space-y-4">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block text-base font-medium text-brand-text transition-colors hover:text-brand-navy"
+                  className="block px-2 text-base font-medium text-brand-text transition-colors hover:text-brand-navy"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {item.name}
                 </Link>
               ))}
-              <div className="space-y-2 pt-4">
+              <div className="space-y-2 border-t border-gray-200 pt-4">
+                <a
+                  href="tel:+971527707492"
+                  className="flex items-center space-x-2 px-2 text-base font-medium text-brand-text transition-colors hover:text-brand-navy"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Phone className="h-4 w-4" />
+                  <span>+971 52 770 7492</span>
+                </a>
                 <Button
                   asChild
                   className="w-full rounded-full bg-brand-green text-white hover:bg-brand-green/90"
@@ -105,6 +123,7 @@ export default function Header() {
                     href="https://wa.me/971527707492"
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     WhatsApp Now
                   </a>
@@ -113,7 +132,9 @@ export default function Header() {
                   asChild
                   className="w-full rounded-full bg-brand-navy text-white hover:bg-brand-navy/90"
                 >
-                  <Link href="/contact">Get a Free Quote</Link>
+                  <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                    Get a Free Quote
+                  </Link>
                 </Button>
               </div>
             </div>

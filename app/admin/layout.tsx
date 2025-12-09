@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { LayoutDashboard, MessageSquare, Settings, LogOut, Shield, Loader2, Megaphone } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Settings, LogOut, Shield, Loader2, Megaphone, FileText } from 'lucide-react';
 
 export default function AdminLayout({
     children,
@@ -16,8 +16,8 @@ export default function AdminLayout({
     const [loading, setLoading] = useState(true);
     const [authenticated, setAuthenticated] = useState(false);
 
-    // Always render login page immediately, don't wait for auth check
-    if (pathname === '/admin/login') {
+    // Always render login and forgot-password pages immediately, don't wait for auth check
+    if (pathname === '/admin/login' || pathname === '/admin/forgot-password') {
         return <main className="min-h-screen bg-gray-50 dark:bg-gray-900">{children}</main>;
     }
 
@@ -47,8 +47,8 @@ export default function AdminLayout({
                     }
                 } else {
                     setAuthenticated(false);
-                    // If not logged in and NOT on login page, go to login
-                    if (pathname !== '/admin/login') {
+                    // If not logged in and NOT on login/forgot-password page, go to login
+                    if (pathname !== '/admin/login' && pathname !== '/admin/forgot-password') {
                         router.replace('/admin/login');
                     }
                 }
@@ -72,7 +72,7 @@ export default function AdminLayout({
                 }
             } else {
                 setAuthenticated(false);
-                if (pathname !== '/admin/login') {
+                if (pathname !== '/admin/login' && pathname !== '/admin/forgot-password') {
                     router.replace('/admin/login');
                 }
             }
@@ -96,6 +96,11 @@ export default function AdminLayout({
                 <Loader2 className="h-8 w-8 animate-spin text-brand-gold" />
             </div>
         );
+    }
+
+    // If on forgot-password page, show simple layout even if authenticated (for password reset flow)
+    if (pathname === '/admin/forgot-password') {
+        return <main className="min-h-screen bg-gray-50 dark:bg-gray-900">{children}</main>;
     }
 
     if (!authenticated) {
@@ -141,6 +146,13 @@ export default function AdminLayout({
                     >
                         <Megaphone className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
                         <span className="font-medium">Broadcasts</span>
+                    </Link>
+                    <Link
+                        href="/admin/blog"
+                        className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-gray-300 transition-all duration-200 hover:bg-brand-gold hover:text-brand-navy hover:shadow-lg hover:shadow-brand-gold/20 ${pathname?.startsWith('/admin/blog') ? 'bg-brand-gold text-brand-navy' : ''}`}
+                    >
+                        <FileText className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                        <span className="font-medium">Blog</span>
                     </Link>
                     <Link
                         href="/admin/settings"

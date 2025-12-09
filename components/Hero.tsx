@@ -27,14 +27,17 @@ export default function Hero({
   const [isVisible, setIsVisible] = useState(false);
   const [currentWord, setCurrentWord] = useState(0);
   const words = ['Employment Visa', 'Family Visa', 'Golden Visa', 'Business Setup'];
+  const useRotatingWords = features.length === 0; // Use rotating words only if no features provided
 
   useEffect(() => {
     setIsVisible(true);
-    const interval = setInterval(() => {
-      setCurrentWord((prev) => (prev + 1) % words.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    if (useRotatingWords) {
+      const interval = setInterval(() => {
+        setCurrentWord((prev) => (prev + 1) % words.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [useRotatingWords]);
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-brand-navy via-[#0A4D94] to-brand-teal py-16 lg:py-24">
@@ -91,22 +94,30 @@ export default function Hero({
               </span>
             </div>
 
-            {/* Title with Typing Animation */}
+            {/* Title */}
             <h1 className="mb-4 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-              <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                Professional
-              </span>
-              <br />
-              <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-brand-gold to-brand-teal bg-clip-text text-transparent transition-all duration-500">
-                  {words[currentWord]}
+              {useRotatingWords ? (
+                <>
+                  <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                    Professional
+                  </span>
+                  <br />
+                  <span className="relative inline-block">
+                    <span className="bg-gradient-to-r from-brand-gold to-brand-teal bg-clip-text text-transparent transition-all duration-500">
+                      {words[currentWord]}
+                    </span>
+                    <span className="absolute -bottom-2 left-0 h-1 w-full bg-gradient-to-r from-brand-gold to-brand-teal"></span>
+                  </span>
+                  <br />
+                  <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
+                    Services in Dubai
+                  </span>
+                </>
+              ) : (
+                <span className="bg-gradient-to-r from-white via-brand-gold to-brand-teal bg-clip-text text-transparent">
+                  {title}
                 </span>
-                <span className="absolute -bottom-2 left-0 h-1 w-full bg-gradient-to-r from-brand-gold to-brand-teal"></span>
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-white to-gray-200 bg-clip-text text-transparent">
-                Services in Dubai
-              </span>
+              )}
             </h1>
 
             {/* Description */}

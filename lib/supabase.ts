@@ -9,6 +9,15 @@ const key = supabaseKey || 'placeholder';
 
 if (!supabaseUrl || !supabaseKey) {
     console.warn('⚠️ Supabase credentials missing! Authentication features will not work.');
+    console.warn('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing');
+    console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseKey ? '✅ Set' : '❌ Missing');
 }
 
-export const supabase = createClient(url, key);
+export const supabase = createClient(url, key, {
+    auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+    },
+});
