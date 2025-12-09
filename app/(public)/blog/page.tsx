@@ -14,9 +14,6 @@ export const metadata: Metadata = {
     },
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://primeuaeservices.com';
 
 const categories = [
@@ -32,6 +29,15 @@ const categories = [
 ];
 
 async function getBlogPosts(category?: string) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn('⚠️ Supabase credentials missing, returning empty blog posts');
+        return [];
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     try {
         // First, try to get all published posts without category filter
         let query = supabase

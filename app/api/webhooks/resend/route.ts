@@ -3,7 +3,7 @@
 // Handles email events from Resend (sent, delivered, opened, clicked, bounced, etc.)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
 // Verify webhook signature (optional but recommended for security)
@@ -195,27 +195,33 @@ async function handleEmailBounced(data: ResendWebhookPayload['data']) {
     
     // Find ticket by recipient email and add note
     if (data.to && data.to.length > 0) {
-        const recipientEmail = data.to[0];
-        const { data: tickets } = await supabase
-            .from('tickets')
-            .select('id, notes, email')
-            .eq('email', recipientEmail)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        if (tickets && tickets.length > 0) {
-            const ticket = tickets[0];
-            const bounceNote = `\n\n[Email Bounced - ${new Date().toLocaleString()}] ${data.reason || 'Email delivery failed'}`;
-            const updatedNotes = (ticket.notes || '') + bounceNote;
-            
-            await supabase
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        
+        if (supabaseUrl && supabaseKey) {
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            const recipientEmail = data.to[0];
+            const { data: tickets } = await supabase
                 .from('tickets')
-                .update({ 
-                    notes: updatedNotes,
-                    // Optionally mark as pending if email is invalid
-                    // status: 'pending'
-                })
-                .eq('id', ticket.id);
+                .select('id, notes, email')
+                .eq('email', recipientEmail)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (tickets && tickets.length > 0) {
+                const ticket = tickets[0];
+                const bounceNote = `\n\n[Email Bounced - ${new Date().toLocaleString()}] ${data.reason || 'Email delivery failed'}`;
+                const updatedNotes = (ticket.notes || '') + bounceNote;
+                
+                await supabase
+                    .from('tickets')
+                    .update({ 
+                        notes: updatedNotes,
+                        // Optionally mark as pending if email is invalid
+                        // status: 'pending'
+                    })
+                    .eq('id', ticket.id);
+            }
         }
     }
 }
@@ -254,6 +260,16 @@ async function logEmailEvent(
     data: any
 ) {
     try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        
+        if (!supabaseUrl || !supabaseKey) {
+            console.warn('⚠️ Supabase credentials missing, skipping email event logging');
+            return;
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
         // Find associated ticket by recipient email
         let ticketId = null;
         if (data.to && data.to.length > 0) {
@@ -300,6 +316,15 @@ async function updateTicketEmailStatus(
     // Try to find ticket by recipient email
     if (!data.to || data.to.length === 0) return;
 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+        console.warn('⚠️ Supabase credentials missing, skipping ticket update');
+        return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const recipientEmail = data.to[0];
     
     // Find the most recent ticket for this email

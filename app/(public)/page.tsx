@@ -38,13 +38,19 @@ export const metadata = {
   },
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 export const revalidate = 0;
 
 async function getLatestBlogPosts() {
     try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        if (!supabaseUrl || !supabaseKey) {
+            console.warn('⚠️ Supabase credentials missing, returning empty blog posts');
+            return [];
+        }
+
+        const supabase = createClient(supabaseUrl, supabaseKey);
         const { data, error } = await supabase
             .from('blog_posts')
             .select('*')

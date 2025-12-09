@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import React from 'react';
 import { ContactEmail } from '@/components/email-templates/ContactEmail';
@@ -21,23 +21,31 @@ export async function POST(request: NextRequest) {
         }
 
         // 1. Save to Supabase (Database Backup)
-        const { error: dbError } = await supabase
-            .from('tickets')
-            .insert([
-                {
-                    name,
-                    email,
-                    phone,
-                    service,
-                    message,
-                    status: 'open',
-                    source: 'website_contact_form',
-                    created_at: new Date().toISOString(),
-                },
-            ]);
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        
+        if (supabaseUrl && supabaseKey) {
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            const { error: dbError } = await supabase
+                .from('tickets')
+                .insert([
+                    {
+                        name,
+                        email,
+                        phone,
+                        service,
+                        message,
+                        status: 'open',
+                        source: 'website_contact_form',
+                        created_at: new Date().toISOString(),
+                    },
+                ]);
 
-        if (dbError) {
-            console.error('Supabase error:', dbError);
+            if (dbError) {
+                console.error('Supabase error:', dbError);
+            }
+        } else {
+            console.warn('⚠️ Supabase credentials missing, skipping database save');
         }
 
         // 2. Send Email Notification via Resend using React Template
