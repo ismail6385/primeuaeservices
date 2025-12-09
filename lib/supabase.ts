@@ -13,11 +13,13 @@ if (!supabaseUrl || !supabaseKey) {
     console.warn('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseKey ? '✅ Set' : '❌ Missing');
 }
 
+const isClient = typeof window !== 'undefined';
+
 export const supabase = createClient(url, key, {
     auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
+        persistSession: isClient,
+        autoRefreshToken: isClient,
+        detectSessionInUrl: isClient,
         flowType: 'pkce',
     },
 });
